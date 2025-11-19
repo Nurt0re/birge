@@ -23,8 +23,39 @@ func handleSplit(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 	}
 	reply := tgbotapi.NewMessage(msg.Chat.ID, "Отлично, давайте начнем разделять счет!\nДобавьте участников чека трапезы:")
 
-	keyboard := AddParticipantsBtn()
+	keyboard := JoinBillBtn(billID)
 	reply.ReplyMarkup = keyboard
 	bot.Send(reply)
-	_ = billID
+
+}
+func handleJoinBill(bot *tgbotapi.BotAPI, callbackQuery *tgbotapi.CallbackQuery, billID int64) {
+	err := service.AddUserToBill(billID, callbackQuery.From.ID, callbackQuery.From.UserName)
+	if err != nil {
+		callback := tgbotapi.NewCallback(callbackQuery.ID, "Произошла ошибка при добавлении вас к счету. Пожалуйста, попробуйте еще раз.")
+		bot.Request(callback)
+		return
+	}
+
+	callback := tgbotapi.NewCallback(callbackQuery.ID, "Вы успешно присоединились к счету")
+	bot.Request(callback)
+
+	participants, err := service.GetBillParticipants(billID)
+	if err != nil {
+		return
+	}
+
+	msgText := "Текущие участники счета:\n"
+	for _, p := range participants {
+		msgText += "- " + p.Username + "\n"
+	}
+
+	edit := tgbotapi.NewEditMessageText(
+		callbackQuery.Message.Chat.ID,
+		callbackQuery.Message.MessageID,
+		msgText,
+	)
+	edit.ReplyMarkup = &tgbotapi.InlineKeyboardMarkup{
+		InlineKeyboard: JoinBillBtn(billID).InlineKeyboard,
+	}
+	bot.Send(edit)
 }

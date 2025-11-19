@@ -13,3 +13,12 @@ func MarkPaidBtn() tgbotapi.InlineKeyboardMarkup {
 		tgbotapi.NewInlineKeyboardRow(btn),
 	)
 }
+
+
+
+func JoinBillBtn(billID int64) tgbotapi.InlineKeyboardMarkup {
+	btn := tgbotapi.NewInlineKeyboardButtonData("Присоединиться к счету", "join_bill_"+string(billID))
+	return tgbotapi.NewInlineKeyboardMarkup(
+		tgbotapi.NewInlineKeyboardRow(btn),
+	)
+}

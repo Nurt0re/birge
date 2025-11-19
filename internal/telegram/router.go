@@ -24,4 +24,18 @@ func routeMessage(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
 
 }
 
-func routeCallbackQuery(bot *tgbotapi.BotAPI, callbackQuery *tgbotapi.CallbackQuery) {}
+func routeCallbackQuery(bot *tgbotapi.BotAPI, callbackQuery *tgbotapi.CallbackQuery) {
+
+	callback := tgbotapi.NewCallback(callbackQuery.ID, "")
+
+	_, _ = bot.Request(callback)
+
+	switch callbackQuery.Data {
+	case "add_participant":
+		handleAddParticipant(bot, callbackQuery)
+	case "mark_paid":
+		handleMarkPaid(bot, callbackQuery)
+	default:
+		// Handle other callback queries
+	}
+}
