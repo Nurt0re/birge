@@ -4,6 +4,7 @@ import (
 	"birge/internal/config"
 	"database/sql"
 	"fmt"
+	 _ "github.com/lib/pq"
 )
 
 func ConnectPostgres(cfg *config.Config) (*sql.DB, error) {
@@ -24,4 +25,5 @@ func ConnectPostgres(cfg *config.Config) (*sql.DB, error) {
 		return nil, err
 	}
 	return db, nil
+
 }
