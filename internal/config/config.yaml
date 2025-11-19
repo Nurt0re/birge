@@ -1,0 +1,5 @@
+db:
+  host: "localhost"
+  port: "5433"
+  user: "admin"
+  dbname: "birge_db"

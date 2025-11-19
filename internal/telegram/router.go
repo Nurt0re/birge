@@ -1,40 +1,63 @@
 package telegram
 
-import tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+import (
+	"strconv"
+	"strings"
 
-func RouteUpdate(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+)
 
-	if update.Message != nil {
-		routeMessage(bot, update.Message)
-	}
-	if update.CallbackQuery != nil {
-		routeCallbackQuery(bot, update.CallbackQuery)
+type Router struct {
+	handler *Handler
+}
+
+func NewRouter(handler *Handler) *Router {
+	return &Router{
+		handler: handler,
 	}
 }
 
-func routeMessage(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
+func (r *Router) RouteUpdate(update tgbotapi.Update) {
+	if update.Message != nil {
+		r.routeMessage(update.Message)
+	}
+	if update.CallbackQuery != nil {
+		r.routeCallbackQuery(update.CallbackQuery)
+	}
+}
+
+func (r *Router) routeMessage(message *tgbotapi.Message) {
 	switch message.Command() {
 	case "start":
-		handleStart(bot, message)
+		r.handler.handleStart(message)
 	case "split":
-		handleSplit(bot, message)
+		r.handler.handleSplit(message)
 	default:
 		// Handle other messages
 	}
 
 }
 
-func routeCallbackQuery(bot *tgbotapi.BotAPI, callbackQuery *tgbotapi.CallbackQuery) {
+func (r *Router) routeCallbackQuery(callbackQuery *tgbotapi.CallbackQuery) {
 
-	callback := tgbotapi.NewCallback(callbackQuery.ID, "")
-
-	_, _ = bot.Request(callback)
-
-	switch callbackQuery.Data {
-	case "add_participant":
-		handleAddParticipant(bot, callbackQuery)
+	parts := strings.Split(callbackQuery.Data, ":")
+	action := parts[0]
+	switch action {
+	case "join_bill":
+		if len(parts) < 2 {
+			callback := tgbotapi.NewCallback(callbackQuery.ID, "Неправильный формат")
+			r.handler.bot.Request(callback)
+			return
+		}
+		billID, err := strconv.ParseInt(parts[1], 10, 64)
+		if err != nil {
+			callback := tgbotapi.NewCallback(callbackQuery.ID, "Неправильный формат ID счета")
+			r.handler.bot.Request(callback)
+			return
+		}
+		r.handler.handleJoinBill(callbackQuery, billID)
 	case "mark_paid":
-		handleMarkPaid(bot, callbackQuery)
+		r.handler.handleMarkPaid(callbackQuery)
 	default:
 		// Handle other callback queries
 	}
